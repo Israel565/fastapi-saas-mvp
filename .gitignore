@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Env / secrets
+.env
+
+# Database (SQLite)
+*.db
+app.db
+
+# Tooling
+.pytest_cache/
+.ruff_cache/

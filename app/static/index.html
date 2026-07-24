@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SaaS MVP</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; background: #0f1117; color: #e6e6e6; }
+    .wrap { max-width: 640px; margin: 40px auto; padding: 0 16px; }
+    h1 { font-size: 22px; }
+    input, button { width: 100%; padding: 12px; margin: 6px 0; border-radius: 8px; border: 1px solid #333; background: #1a1d27; color: #fff; }
+    button { background: #4f46e5; border: none; cursor: pointer; font-weight: 600; }
+    button:hover { background: #4338ca; }
+    .row { display: flex; gap: 8px; }
+    .row input { flex: 1; }
+    .card { background: #1a1d27; border: 1px solid #333; border-radius: 12px; padding: 16px; margin: 12px 0; }
+    #chat { min-height: 80px; white-space: pre-wrap; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>FastAPI SaaS MVP</h1>
+
+    <div id="auth">
+      <div class="card">
+        <h3>Login</h3>
+        <input id="login-email" placeholder="email" />
+        <input id="login-pass" type="password" placeholder="password" />
+        <button onclick="login()">Login</button>
+      </div>
+      <div class="card">
+        <h3>Register</h3>
+        <input id="reg-email" placeholder="email" />
+        <input id="reg-pass" type="password" placeholder="password" />
+        <button onclick="register()">Create account</button>
+      </div>
+    </div>
+
+    <div id="app" class="hidden">
+      <div class="card">
+        <h3>AI Chat</h3>
+        <input id="msg" placeholder="Ask something..." />
+        <button onclick="chat()">Send</button>
+        <div id="chat" class="card"></div>
+      </div>
+      <div class="card">
+        <h3>Upgrade to Premium</h3>
+        <button onclick="checkout()">Subscribe</button>
+      </div>
+      <button onclick="logout()">Logout</button>
+    </div>
+  </div>
+
+  <script>
+    const API = "";
+    let token = localStorage.getItem("token");
+
+    function showApp() {
+      if (token) { document.getElementById("auth").classList.add("hidden"); document.getElementById("app").classList.remove("hidden"); }
+    }
+    showApp();
+
+    async function register() {
+      const r = await fetch(API + "/auth/register", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email: document.getElementById('reg-email').value, password: document.getElementById('reg-pass').value })
+      });
+      const d = await r.json(); if (r.ok) { token = d.access_token; localStorage.setItem("token", token); showApp(); } else alert(d.detail);
+    }
+    async function login() {
+      const r = await fetch(API + "/auth/login", {
+        method: "POST", headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ email: document.getElementById('login-email').value, password: document.getElementById('login-pass').value })
+      });
+      const d = await r.json(); if (r.ok) { token = d.access_token; localStorage.setItem("token", token); showApp(); } else alert(d.detail);
+    }
+    async function chat() {
+      const r = await fetch(API + "/api/chat", {
+        method: "POST", headers: {"Content-Type": "application/json", "Authorization": "Bearer " + token},
+        body: JSON.stringify({ message: document.getElementById('msg').value })
+      });
+      const d = await r.json(); document.getElementById("chat").textContent = d.reply;
+    }
+    async function checkout() {
+      const r = await fetch(API + "/billing/checkout", { headers: {"Authorization": "Bearer " + token} });
+      const d = await r.json(); window.location = d.url;
+    }
+    function logout() { token = null; localStorage.removeItem("token"); location.reload(); }
+  </script>
+</body>
+</html>
